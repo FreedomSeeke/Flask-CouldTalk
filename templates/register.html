@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>注册 - 欢迎注册辉哥聊天系统</title>
+    <!-- Favicon图标 -->
+    <link rel="icon" href="{{ url_for('static', filename='images/❤.png') }}" type="image/x-icon">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f5f5f5;
+            margin: 0;
+        }
+        .register-box {
+            width: 350px;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .logo-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            object-fit: cover;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-item {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            outline: none;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #1677ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0f6ede;
+        }
+        .login-link {
+            margin-top: 15px;
+        }
+        a {
+            color: #1677ff;
+            text-decoration: none;
+        }
+        .error {
+            color: #ff3b30;
+            margin-bottom: 15px;
+            padding: 8px;
+            background: #fff2f0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-box">
+        <!-- 页面内Logo -->
+        <img src="{{ url_for('static', filename='images/❤.png') }}" class="logo-img" alt="Logo">
+        <h2>欢迎注册辉哥聊天系统</h2>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        <form method="post">
+            <div class="form-item">
+                <input type="text" name="username" placeholder="用户名" required>
+            </div>
+            <div class="form-item">
+                <input type="password" name="password" placeholder="密码" required>
+            </div>
+            <div class="form-item">
+                <input type="password" name="confirm_password" placeholder="确认密码" required>
+            </div>
+            <!-- 在注册密码输入框下方添加 -->
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                密码要求：字母+数字组合，长度不少于6位
+            </div>
+            <button type="submit">注册</button>
+        </form>
+        <div class="login-link">
+            已有账号？<a href="/login">立即登录</a>
+        </div>
+    </div>
+</body>
+</html>

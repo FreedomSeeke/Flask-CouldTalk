@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>管理员面板</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/heart.ico') }}" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f5f5f5;
+            font-family: "Microsoft YaHei", sans-serif;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .header h1 {
+            color: #333;
+        }
+        .nav-links {
+            display: flex;
+            gap: 10px;
+        }
+        .nav-link {
+            color: #1677ff;
+            text-decoration: none;
+            padding: 5px 10px;
+            border: 1px solid #1677ff;
+            border-radius: 5px;
+        }
+        .logout-link {
+            color: #ff3b30;
+            text-decoration: none;
+            padding: 5px 10px;
+            border: 1px solid #ff3b30;
+            border-radius: 5px;
+        }
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .user-table th, .user-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .user-table th {
+            background: #f9f9f9;
+            color: #333;
+        }
+        .status-tag {
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        .tag-online {
+            background: #e6f7ef;
+            color: #07C160;
+        }
+        .tag-offline {
+            background: #f5f5f5;
+            color: #999;
+        }
+        .tag-muted {
+            background: #fff7e6;
+            color: #fa8c16;
+        }
+        .tag-banned {
+            background: #fff2f0;
+            color: #ff3b30;
+        }
+        .btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        .btn-mute {
+            background: #fa8c16;
+            color: white;
+        }
+        .btn-ban {
+            background: #ff3b30;
+            color: white;
+        }
+        .btn-view {
+            background: #1677ff;
+            color: white;
+        }
+        .btn-password {
+            background: #722ed1;
+            color: white;
+        }
+        .btn-logout {
+            background: #52c41a;
+            color: white;
+        }
+        .login-info {
+            font-size: 12px;
+            color: #666;
+        }
+        .password-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .password-modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 400px;
+        }
+        .password-modal h3 {
+            margin-bottom: 20px;
+        }
+        .password-modal input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .password-modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .password-modal-buttons button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-cancel {
+            background: #999;
+            color: white;
+        }
+        .btn-confirm {
+            background: #1677ff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>管理员面板 - 所有用户管理</h1>
+        <div class="nav-links">
+            <a href="/admin/view_activities" class="nav-link">查看用户行为日志</a>
+            <a href="/logout" class="logout-link">退出登录</a>
+        </div>
+    </div>
+
+    <table class="user-table">
+        <thead>
+            <tr>
+                <th>用户ID</th>
+                <th>用户名</th>
+                <th>角色</th>
+                <th>在线状态</th>
+                <th>状态</th>
+                <th>登录设备</th>
+                <th>最后登录时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ '管理员' if user.role == 'admin' else '普通用户' }}</td>
+                <td>
+                    <span class="status-tag {{ 'tag-online' if user.online else 'tag-offline' }}">
+                        {{ '在线' if user.online else '离线' }}
+                    </span>
+                </td>
+                <td>
+                    {% if user.is_banned %}
+                        <span class="status-tag tag-banned">已封号</span>
+                    {% elif user.is_muted %}
+                        <span class="status-tag tag-muted">已禁言</span>
+                    {% else %}
+                        <span class="status-tag tag-offline">正常</span>
+                    {% endif %}
+                </td>
+                <td class="login-info">{{ user.login_device or '未登录' }}</td>
+                <td class="login-info">{{ user.last_login_time.strftime('%Y-%m-%d %H:%M') if user.last_login_time else '未登录' }}</td>
+                <td>
+                    {% if user.role != 'admin' %}
+                        <button class="btn btn-mute" onclick="updateUserStatus({{ user.id }}, 'mute')">
+                            {{ '解除禁言' if user.is_muted else '禁言' }}
+                        </button>
+                        <button class="btn btn-ban" onclick="updateUserStatus({{ user.id }}, 'ban')">
+                            {{ '解封' if user.is_banned else '封号' }}
+                        </button>
+                        <button class="btn btn-logout" onclick="logoutUserAccount({{ user.id }})">
+                            注销账户
+                        </button>
+                    {% endif %}
+                    <button class="btn btn-password" onclick="changeUserPassword({{ user.id }})">
+                        修改密码
+                    </button>
+                    <button class="btn btn-view" onclick="window.location.href='/admin/view_messages/{{ user.id }}'">
+                        查看聊天记录
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- 密码修改模态框 -->
+    <div id="passwordModal" class="password-modal" style="display: none;">
+        <div class="password-modal-content">
+            <h3>修改用户密码</h3>
+            <input type="hidden" id="targetUserId">
+            <input type="password" id="newPassword" placeholder="请输入新密码（至少6位，包含字母和数字）">
+            <div class="password-modal-buttons">
+                <button class="btn-cancel" onclick="hidePasswordModal()">取消</button>
+                <button class="btn-confirm" onclick="confirmChangePassword()">确认修改</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>
+        function updateUserStatus(userId, action) {
+            $.ajax({
+                url: `/admin/update_user/${userId}`,
+                type: 'POST',
+                data: { action: action },
+                success: function(res) {
+                    alert(res.msg);
+                    window.location.reload();
+                },
+                error: function() {
+                    alert('操作失败');
+                }
+            });
+        }
+
+        function changeUserPassword(userId) {
+            $('#targetUserId').val(userId);
+            $('#newPassword').val('');
+            $('#passwordModal').show();
+        }
+
+        function hidePasswordModal() {
+            $('#passwordModal').hide();
+        }
+
+        function confirmChangePassword() {
+            const userId = $('#targetUserId').val();
+            const newPassword = $('#newPassword').val();
+
+            if (!newPassword) {
+                alert('请输入新密码');
+                return;
+            }
+
+            $.ajax({
+                url: `/admin/change_password/${userId}`,
+                type: 'POST',
+                data: { new_password: newPassword },
+                success: function(res) {
+                    alert(res.msg);
+                    $('#passwordModal').hide();
+                    window.location.reload();
+                },
+                error: function() {
+                    alert('操作失败');
+                }
+            });
+        }
+
+        function logoutUserAccount(userId) {
+            if (confirm('确定要注销该用户的账户吗？此操作将从数据库中永久删除该账户。')) {
+                $.ajax({
+                    url: `/admin/logout_user/${userId}`,
+                    type: 'POST',
+                    success: function(res) {
+                        alert(res.msg);
+                        window.location.reload();
+                    },
+                    error: function() {
+                        alert('操作失败');
+                    }
+                });
+            }
+        }
+
+        // 点击模态框外部关闭
+        $(document).click(function(event) {
+            if ($(event.target).is('#passwordModal')) {
+                hidePasswordModal();
+            }
+        });
+    </script>
+</body>
+</html>

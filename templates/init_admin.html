@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>初始化管理员账号</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .error {
+            color: red;
+            margin-bottom: 15px;
+        }
+        .success {
+            color: green;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h2>初始化管理员账号</h2>
+    <div id="message"></div>
+
+    <form id="initForm">
+        <div class="form-group">
+            <label for="secret_key">安全密钥</label>
+            <input type="text" id="secret_key" name="secret_key" required placeholder="输入初始化密钥">
+        </div>
+        <div class="form-group">
+            <label for="username">管理员用户名</label>
+            <input type="text" id="username" name="username" required placeholder="设置管理员账号">
+        </div>
+        <div class="form-group">
+            <label for="password">管理员密码</label>
+            <input type="password" id="password" name="password" required placeholder="设置管理员密码（至少6位）">
+        </div>
+        <button type="submit">创建管理员账号</button>
+    </form>
+
+    <script>
+        document.getElementById('initForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            fetch('/init_admin', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const messageDiv = document.getElementById('message');
+                messageDiv.className = data.code === 1 ? 'success' : 'error';
+                messageDiv.textContent = data.msg;
+
+                if (data.code === 1) {
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                }
+            })
+            .catch(error => {
+                document.getElementById('message').className = 'error';
+                document.getElementById('message').textContent = '请求失败：' + error.message;
+            });
+        });
+    </script>
+</body>
+</html>

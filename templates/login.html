@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>登录 - 欢迎登录辉哥聊天系统</title>
+    <!-- 添加Favicon图标 -->
+    <link rel="icon" href="{{ url_for('static', filename='images/❤.png') }}" type="image/x-icon">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f5f5f5;
+            margin: 0;
+        }
+        .login-box {
+            width: 350px;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        /* Logo样式 */
+        .logo-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            object-fit: cover;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-item {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            outline: none;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #07C160;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #06b058;
+        }
+        .register-link {
+            margin-top: 15px;
+        }
+        a {
+            color: #1677ff;
+            text-decoration: none;
+        }
+        .error {
+            color: #ff3b30;
+            margin-bottom: 15px;
+            padding: 8px;
+            background: #fff2f0;
+            border-radius: 5px;
+        }
+        .verify-code-tip {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <!-- 页面内Logo -->
+        <img src="{{ url_for('static', filename='images/❤.png') }}" class="logo-img" alt="Logo">
+        <h2>欢迎登录辉哥聊天系统</h2>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        <form method="post">
+            <div class="form-item">
+                <input type="text" name="username" placeholder="用户名" required>
+            </div>
+            <div class="form-item">
+                <input type="password" name="password" placeholder="密码" required>
+            </div>
+            {% if show_verify %}
+                <div class="form-item">
+                    <div class="verify-code-tip">验证码：{{ verify_code }}</div>
+                    <input type="text" name="verify_code" placeholder="请输入4位验证码" required maxlength="4">
+                </div>
+            {% endif %}
+            <button type="submit">登录</button>
+        </form>
+        <div class="register-link">
+            还没有账号？<a href="/register">立即注册</a>
+        </div>
+    </div>
+</body>
+</html>

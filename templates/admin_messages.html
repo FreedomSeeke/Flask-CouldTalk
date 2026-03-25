@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>查看{{ target_user.username }}的聊天记录 - 管理员面板</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/heart.ico') }}" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f5f5f5;
+            font-family: "Microsoft YaHei", sans-serif;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .header h1 {
+            color: #333;
+        }
+        .back-link {
+            color: #1677ff;
+            text-decoration: none;
+            padding: 5px 10px;
+            border: 1px solid #1677ff;
+            border-radius: 5px;
+        }
+        .message-box {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .message-item {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 10px;
+        }
+        .message-item:last-child {
+            border-bottom: none;
+        }
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        .sender {
+            font-weight: bold;
+            color: #1677ff;
+        }
+        .receiver {
+            color: #666;
+        }
+        .time {
+            font-size: 12px;
+            color: #999;
+        }
+        .message-content {
+            padding: 5px 0;
+            line-height: 1.5;
+        }
+        .file-content {
+            margin-top: 5px;
+        }
+        .file-content img {
+            max-width: 200px;
+            border-radius: 5px;
+        }
+        .empty-tip {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>聊天记录 - {{ target_user.username }}</h1>
+        <a href="/admin/panel" class="back-link">返回管理面板</a>
+    </div>
+
+    <div class="message-box">
+        {% if messages %}
+            {% for msg in messages %}
+            <div class="message-item">
+                <div class="message-header">
+                    <div>
+                        发送者: <span class="sender">{{ msg.sender }}</span>
+                        → 接收者: <span class="receiver">{{ msg.receiver }}</span>
+                    </div>
+                    <div class="time">{{ msg.timestamp }}</div>
+                </div>
+                <div class="message-content">
+                    {% if msg.content %}
+                        {{ msg.content }}
+                    {% elif msg.file_type == 'image' %}
+                        <div class="file-content">
+                            <img src="{{ msg.file_path }}" alt="图片">
+                            <p>图片文件</p>
+                        </div>
+                    {% elif msg.file_type == 'audio' %}
+                        <div class="file-content">
+                            <audio controls src="{{ msg.file_path }}">您的浏览器不支持音频播放</audio>
+                            <p>音频文件</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-tip">该用户暂无聊天记录</div>
+        {% endif %}
+    </div>
+</body>
+</html>
