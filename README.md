@@ -30,4 +30,4 @@ git clone https://github.com/FreedomSeeke/Flask-Chat.git
 
 欢迎大家进行二次开发
 
-<img width="1122" height="1489" alt="mmqrcode1774426381728" src="https://github.com/user-attachments/assets/0a2c6783-7ccf-4091-a57a-099ed1c215ac" />
+<img src="https://github.com/user-attachments/assets/0a2c6783-7ccf-4091-a57a-099ed1c215ac" width="300" height="300" />
