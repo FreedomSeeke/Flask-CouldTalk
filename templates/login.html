@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>登录 - 欢迎登录辉哥聊天系统</title>
     <!-- 添加Favicon图标 -->
     <link rel="icon" href="{{ url_for('static', filename='images/❤.png') }}" type="image/x-icon">
@@ -77,6 +78,34 @@
             color: #666;
             font-size: 14px;
             margin-bottom: 5px;
+        }
+        
+        /* 响应式设计 - 手机屏幕适配 */
+        @media (max-width: 768px) {
+            .login-box {
+                width: 90%;
+                max-width: 350px;
+                padding: 20px;
+            }
+            
+            .logo-img {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 15px;
+            }
+            
+            h2 {
+                font-size: 20px;
+                margin-bottom: 15px;
+            }
+            
+            input {
+                padding: 12px;
+            }
+            
+            button {
+                padding: 12px;
+            }
         }
     </style>
 </head>

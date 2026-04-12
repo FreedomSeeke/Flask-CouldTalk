@@ -80,6 +80,8 @@ class User(UserMixin, db.Model):
     session_created_at = db.Column(db.DateTime, nullable=True)  # 会话创建时间，用于会话超时
     # -------------- 新增字段：当前有效会话ID --------------
     current_session_id = db.Column(db.String(100), nullable=True)  # 存储当前唯一有效登录的会话ID
+    # -------------- 新增字段：头像 --------------
+    avatar = db.Column(db.String(255), nullable=True)  # 头像路径
 
 
 class Message(db.Model):
@@ -116,7 +118,7 @@ class Friend(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     friend_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now())
-    
+
     # 关系定义
     user = db.relationship('User', foreign_keys=[user_id], backref='friendships')
     friend = db.relationship('User', foreign_keys=[friend_id], backref='friend_of')
@@ -205,7 +207,7 @@ def get_user_ip():
         'HTTP_X_CLUSTER_CLIENT_IP',
         'HTTP_CLIENT_IP'
     ]
-    
+
     for header in ip_headers:
         ip = request.headers.get(header, '')
         if ip:
@@ -243,7 +245,7 @@ def get_user_ip():
                             break
                     if not is_private:
                         return ip
-    
+
     # 直接从请求中获取IP
     ip = request.remote_addr
     return ip or 'unknown'
@@ -314,7 +316,7 @@ def get_friends(user_id):
     # 查询用户作为发起方的好友关系
     friend_relationships = Friend.query.filter_by(user_id=user_id).all()
     for relationship in friend_relationships:
-        friend = User.query.get(relationship.friend_id)
+        friend = db.session.get(User, relationship.friend_id)
         if friend and not friend.is_banned:
             friends.append(friend)
     return friends
@@ -512,7 +514,7 @@ def admin_panel():
     """管理员面板：查看所有用户"""
     # 记录管理后台访问行为
     log_user_activity(current_user.id, 'admin_access', '访问管理员面板')
-    
+
     users = User.query.all()
     return render_template('admin_panel.html',
                            current_user=current_user,
@@ -544,10 +546,17 @@ def update_user_status(user_id):
         return jsonify({'code': 0, 'msg': '无效操作'})
 
     db.session.commit()
-    
+
+    # 推送用户状态更新
+    user_status = {
+        'is_muted': user.is_muted,
+        'is_banned': user.is_banned
+    }
+    socketio.emit('user_status', user_status, room=str(user.id))
+
     # 记录管理员操作行为
     log_user_activity(current_user.id, 'admin_action', msg)
-    
+
     return jsonify({'code': 1, 'msg': msg})
 
 
@@ -558,26 +567,26 @@ def update_user_status(user_id):
 def change_user_password(user_id):
     """管理员修改用户密码"""
     user = User.query.get_or_404(user_id)
-    
+
     new_password = request.form.get('new_password')
     if not new_password:
         return jsonify({'code': 0, 'msg': '新密码不能为空'})
-    
+
     # 验证密码格式
     if not is_valid_password(new_password):
         return jsonify({'code': 0, 'msg': PASSWORD_ERROR_MSG})
-    
+
     # 更新密码
     hashed_pwd = generate_password_hash(new_password, method='pbkdf2:sha256')
     user.password = hashed_pwd
     # 密码修改后，强制用户下线
     invalidate_user_session(user)
     db.session.commit()
-    
+
     msg = f"用户{user.username}的密码已修改"
     # 记录管理员操作行为
     log_user_activity(current_user.id, 'admin_action', msg)
-    
+
     return jsonify({'code': 1, 'msg': msg})
 
 
@@ -591,7 +600,7 @@ def logout_user_account(user_id):
     # 禁止管理员注销自己的账户
     if user.id == current_user.id:
         return jsonify({'code': 0, 'msg': '无法注销自身账户'})
-    
+
     # 从数据库中删除用户
     username = user.username
     # 先删除相关的消息、好友关系等数据
@@ -611,14 +620,14 @@ def logout_user_account(user_id):
     # 删除用户本身
     db.session.delete(user)
     db.session.commit()
-    
+
     # 重新排序用户ID
     reorder_user_ids()
-    
+
     msg = f"用户{username}的账户已被注销并从数据库中删除"
     # 记录管理员操作行为
     log_user_activity(current_user.id, 'admin_action', msg)
-    
+
     return jsonify({'code': 1, 'msg': msg})
 
 
@@ -631,7 +640,7 @@ def view_all_messages(user_id):
     target_user = User.query.get_or_404(user_id)
     # 记录管理后台访问行为
     log_user_activity(current_user.id, 'admin_access', f'查看用户 {target_user.username} 的聊天记录')
-    
+
     # 查询该用户发送/接收的所有消息
     messages = Message.query.filter(
         (Message.sender_id == user_id) | (Message.receiver_id == user_id)
@@ -640,8 +649,8 @@ def view_all_messages(user_id):
     # 格式化消息数据
     message_list = []
     for msg in messages:
-        sender = User.query.get(msg.sender_id)
-        receiver = User.query.get(msg.receiver_id)
+        sender = db.session.get(User, msg.sender_id)
+        receiver = db.session.get(User, msg.receiver_id)
         message_list.append({
             'id': msg.id,
             'sender': sender.username,
@@ -690,7 +699,7 @@ def view_activities():
     # ===== 格式化日志数据 =====
     activity_list = []
     for activity in activities:
-        user = User.query.get(activity.user_id)
+        user = db.session.get(User, activity.user_id)
         activity_list.append({
             'id': activity.id,
             'username': user.username if user else '未知用户',
@@ -711,13 +720,13 @@ def view_activities():
 #def view_activities():
 # 记录管理后台访问行为
 #log_user_activity(current_user.id, 'admin_access', '查看用户行为日志')
-    
+
 # 查询所有用户行为日志，按时间倒序排列
 #    activities = UserActivity.query \
 #    .order_by(UserActivity.id.desc()) \
 #    .limit(100) \
 #    .all()
-    
+
     # 格式化日志数据
 #    activity_list = []
 #    for activity in activities:
@@ -730,7 +739,7 @@ def view_activities():
 #            'action_detail': activity.action_detail,
 #            'created_at': activity.created_at.strftime('%Y-%m-%d %H:%M:%S')
 #        })
-    
+
 #    return render_template('admin_activities.html',
 #                           current_user=current_user,
 #                           activities=activity_list)
@@ -743,20 +752,20 @@ def reorder_activity_ids():
     try:
         # 获取所有日志，按ID升序排列
         activities = UserActivity.query.order_by(UserActivity.id).all()
-        
+
         # 重新分配ID
         for i, activity in enumerate(activities, 1):
             activity.id = i
-        
+
         # 提交更改
         db.session.commit()
-        
+
         # 重置自增计数器
         # 使用原生SQL重置自增计数器
         from sqlalchemy import text
         db.session.execute(text("ALTER TABLE user_activities AUTO_INCREMENT = " + str(len(activities) + 1)))
         db.session.commit()
-        
+
         return True
     except Exception as e:
         print(f"重新排序日志ID失败: {e}")
@@ -771,20 +780,20 @@ def reorder_user_ids():
     try:
         # 获取所有用户，按ID升序排列
         users = User.query.order_by(User.id).all()
-        
+
         # 重新分配ID
         for i, user in enumerate(users, 1):
             user.id = i
-        
+
         # 提交更改
         db.session.commit()
-        
+
         # 重置自增计数器
         # 使用原生SQL重置自增计数器
         from sqlalchemy import text
         db.session.execute(text("ALTER TABLE users AUTO_INCREMENT = " + str(len(users) + 1)))
         db.session.commit()
-        
+
         return True
     except Exception as e:
         print(f"重新排序用户ID失败: {e}")
@@ -805,13 +814,13 @@ def delete_activity(activity_id):
         activity = UserActivity.query.get_or_404(activity_id)
         db.session.delete(activity)
         db.session.commit()
-        
+
         # 重新排序ID
         reorder_activity_ids()
-        
+
         # 记录管理员操作
         log_user_activity(current_user.id, 'admin_action', f'删除单条日志（ID: {activity_id}）')
-        
+
         return jsonify({'code': 1, 'msg': '删除成功'})
     except Exception as e:
         print(f"删除日志失败: {e}")
@@ -847,24 +856,24 @@ def delete_activities():
             except:
                 # 尝试按逗号分割
                 activity_ids = activity_ids.split(',')
-        
+
         # 确保是列表
         if not isinstance(activity_ids, list):
             activity_ids = [activity_ids]
-        
+
         # 转换为整数
         activity_ids = [int(id) for id in activity_ids]
-        
+
         # 删除日志
         UserActivity.query.filter(UserActivity.id.in_(activity_ids)).delete(synchronize_session=False)
         db.session.commit()
-        
+
         # 重新排序ID
         reorder_activity_ids()
-        
+
         # 记录管理员操作
         log_user_activity(current_user.id, 'admin_action', f'批量删除日志（数量: {len(activity_ids)}）')
-        
+
         return jsonify({'code': 1, 'msg': f'成功删除 {len(activity_ids)} 条日志'})
     except Exception as e:
         print(f"批量删除日志失败: {e}")
@@ -884,15 +893,15 @@ def clear_activities():
         # 删除所有日志
         UserActivity.query.delete()
         db.session.commit()
-        
+
         # 重置自增计数器
         from sqlalchemy import text
         db.session.execute(text("ALTER TABLE user_activities AUTO_INCREMENT = 1"))
         db.session.commit()
-        
+
         # 记录管理员操作
         log_user_activity(current_user.id, 'admin_action', '清空所有日志')
-        
+
         return jsonify({'code': 1, 'msg': '已清空所有日志'})
     except Exception as e:
         print(f"清空日志失败: {e}")
@@ -1055,7 +1064,7 @@ def register():
 def logout():
     # 记录登出行为
     log_user_activity(current_user.id, 'logout', '用户主动登出')
-    
+
     # -------------- 关键修改：登出时，清空用户的current_session_id，使所有会话失效 --------------
     invalidate_user_session(current_user)
     # 清除当前session中的会话ID
@@ -1077,20 +1086,20 @@ def send_friend_request(receiver_id):
     # 不能向自己发送请求
     if receiver_id == current_user.id:
         return jsonify({'code': 0, 'msg': '不能向自己发送好友请求'})
-    
+
     # 检查用户是否存在
-    receiver = User.query.get(receiver_id)
+    receiver = db.session.get(User, receiver_id)
     if not receiver or receiver.is_banned:
         return jsonify({'code': 0, 'msg': '用户不存在或已被封号'})
-    
+
     # 检查是否已经是好友
     if are_friends(current_user.id, receiver_id):
         return jsonify({'code': 0, 'msg': '已经是好友'})
-    
+
     # 检查是否有未处理的请求
     if has_pending_request(current_user.id, receiver_id):
         return jsonify({'code': 0, 'msg': '好友请求已发送，请等待对方响应'})
-    
+
     # 发送好友请求
     try:
         request = FriendRequest(
@@ -1118,20 +1127,20 @@ def handle_friend_request(request_id, action):
     # 验证操作类型
     if action not in ['accept', 'reject']:
         return jsonify({'code': 0, 'msg': '无效的操作类型'})
-    
+
     # 查找请求
-    request = FriendRequest.query.get(request_id)
+    request = db.session.get(FriendRequest, request_id)
     if not request:
         return jsonify({'code': 0, 'msg': '好友请求不存在'})
-    
+
     # 验证请求接收者
     if request.receiver_id != current_user.id:
         return jsonify({'code': 0, 'msg': '无权处理此好友请求'})
-    
+
     # 验证请求状态
     if request.status != 'pending':
         return jsonify({'code': 0, 'msg': '好友请求已处理'})
-    
+
     try:
         if action == 'accept':
             # 接受请求，创建好友关系
@@ -1164,7 +1173,7 @@ def remove_friend(friend_id):
     # 检查是否是好友
     if not are_friends(current_user.id, friend_id):
         return jsonify({'code': 0, 'msg': '不是好友关系'})
-    
+
     # 删除好友关系（双向）
     try:
         # 删除用户对对方的好友关系
@@ -1194,21 +1203,7 @@ def session_heartbeat():
         return jsonify({'code': 0, 'msg': '会话已失效'})
 
 
-@app.route('/user/status')
-@login_required
-def get_user_status():
-    """
-    获取当前用户的状态信息
-    :return: JSON响应，包含用户的禁言和封号状态
-    """
-    return jsonify({
-        'code': 1,
-        'msg': '获取用户状态成功',
-        'data': {
-            'is_muted': current_user.is_muted,
-            'is_banned': current_user.is_banned
-        }
-    })
+
 
 
 @app.route('/search_user')
@@ -1221,17 +1216,17 @@ def search_user():
     keyword = request.args.get('keyword', '').strip()
     if not keyword:
         return jsonify({'code': 0, 'msg': '请输入搜索关键词'})
-    
+
     # 搜索用户名包含关键词的用户
     matched_users = User.query.filter(
         User.username.like(f'%{keyword}%'),
         User.id != current_user.id,
         User.is_banned == False
     ).all()
-    
+
     # 只显示非好友用户
     non_friends = []
-    
+
     for user in matched_users:
         if not are_friends(current_user.id, user.id):
             # 检查是否有未处理的好友请求
@@ -1242,13 +1237,59 @@ def search_user():
                 'online': user.online,
                 'has_pending_request': has_pending
             })
-    
+
     return jsonify({
         'code': 1,
         'msg': f'找到{len(non_friends)}个用户',
         'data': {
             'non_friends': non_friends
         }
+    })
+
+
+@app.route('/search_all_messages')
+@login_required
+def search_all_messages():
+    """
+    搜索所有聊天记录
+    :return: JSON响应，包含匹配的聊天记录
+    """
+    keyword = request.args.get('keyword', '').strip()
+    if not keyword:
+        return jsonify({'code': 0, 'msg': '请输入搜索关键词', 'data': []})
+
+    # 搜索所有好友的聊天记录
+    friends = get_friends(current_user.id)
+    friend_ids = [friend.id for friend in friends]
+
+    # 搜索与好友的聊天记录
+    messages = Message.query.filter(
+        ((Message.sender_id == current_user.id) & (Message.receiver_id.in_(friend_ids))) |
+        ((Message.sender_id.in_(friend_ids)) & (Message.receiver_id == current_user.id)),
+        Message.content.like(f'%{keyword}%')
+    ).order_by(Message.timestamp.desc()).all()
+
+    # 格式化消息数据
+    message_list = []
+    for msg in messages:
+        sender = db.session.get(User, msg.sender_id)
+        receiver = db.session.get(User, msg.receiver_id)
+        message_list.append({
+            'id': msg.id,
+            'sender_id': msg.sender_id,
+            'receiver_id': msg.receiver_id,
+            'sender_name': sender.username,
+            'receiver_name': receiver.username,
+            'content': msg.content,
+            'file_type': msg.file_type,
+            'file_path': msg.file_path,
+            'timestamp': msg.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        })
+
+    return jsonify({
+        'code': 1,
+        'msg': f'找到{len(message_list)}条聊天记录',
+        'data': message_list
     })
 
 
@@ -1304,7 +1345,7 @@ def get_messages(receiver_id):
     # 检查是否是好友
     if not are_friends(current_user.id, receiver_id):
         return jsonify([])
-    
+
     # 禁言用户仅能查看消息，无法发送
     messages = Message.query.filter(
         ((Message.sender_id == current_user.id) & (Message.receiver_id == receiver_id)) |
@@ -1330,7 +1371,7 @@ def search_messages(receiver_id):
     # 检查是否是好友
     if not are_friends(current_user.id, receiver_id):
         return jsonify({'code': 0, 'msg': '只有好友之间才能搜索消息', 'data': []})
-    
+
     keyword = request.args.get('keyword', '').strip()
     if not keyword:
         return jsonify({'code': 0, 'msg': '请输入搜索关键词', 'data': []})
@@ -1360,13 +1401,16 @@ def clear_messages(receiver_id):
     # 检查是否是好友
     if not are_friends(current_user.id, receiver_id):
         return jsonify({'code': 0, 'msg': '只有好友之间才能清空消息'})
-    
+
     Message.query.filter(
         ((Message.sender_id == current_user.id) & (Message.receiver_id == receiver_id)) |
         ((Message.sender_id == receiver_id) & (Message.receiver_id == current_user.id))
     ).delete()
     db.session.commit()
     return jsonify({'code': 1, 'msg': '聊天记录已清空'})
+
+
+
 
 
 # -------------- SocketIO --------------
@@ -1384,6 +1428,12 @@ def handle_connect():
         return
     print(f'用户 {current_user.username} 已连接')
     join_room(str(current_user.id))
+    # 推送用户状态
+    user_status = {
+        'is_muted': current_user.is_muted,
+        'is_banned': current_user.is_banned
+    }
+    emit('user_status', user_status, room=str(current_user.id))
 
 
 @socketio.on('send_text_message')
@@ -1410,7 +1460,7 @@ def handle_send_text_message(data):
         return
 
     # 再次检查用户状态，确保在发送过程中没有被禁言或封号
-    user = User.query.get(current_user.id)
+    user = db.session.get(User, current_user.id)
     if user.is_muted or user.is_banned:
         emit('message_error', {'msg': '您已被禁言/封号，无法发送消息'})
         return
@@ -1424,9 +1474,9 @@ def handle_send_text_message(data):
     )
     db.session.add(new_message)
     db.session.commit()
-    
+
     # 记录发送消息行为
-    receiver = User.query.get(receiver_id)
+    receiver = db.session.get(User, receiver_id)
     log_user_activity(current_user.id, 'send_message', f'发送文本消息给 {receiver.username}')
 
     message_data = {
@@ -1464,7 +1514,7 @@ def handle_send_file_message(data):
     file_path = data['file_path']
 
     # 再次检查用户状态，确保在发送过程中没有被禁言或封号
-    user = User.query.get(current_user.id)
+    user = db.session.get(User, current_user.id)
     if user.is_muted or user.is_banned:
         emit('message_error', {'msg': '您已被禁言/封号，无法发送文件'})
         return
@@ -1478,9 +1528,9 @@ def handle_send_file_message(data):
     )
     db.session.add(new_message)
     db.session.commit()
-    
+
     # 记录发送文件消息行为
-    receiver = User.query.get(receiver_id)
+    receiver = db.session.get(User, receiver_id)
     log_user_activity(current_user.id, 'send_file', f'发送{file_type}文件给 {receiver.username}')
 
     message_data = {
@@ -1511,6 +1561,71 @@ with app.app_context():
     db.create_all()
     # 移除自动创建管理员账号的逻辑
     print("MySQL数据库表初始化完成！")
+
+# -------------- 修改用户信息接口 --------------
+@app.route('/update_username', methods=['POST'])
+@login_required
+def update_username():
+    """
+    修改用户名
+    :return: JSON响应
+    """
+    new_username = request.form.get('username', '').strip()
+    if not new_username:
+        return jsonify({'code': 0, 'msg': '请输入新用户名'})
+
+    # 检查用户名是否已存在
+    existing_user = User.query.filter_by(username=new_username).first()
+    if existing_user and existing_user.id != current_user.id:
+        return jsonify({'code': 0, 'msg': '用户名已存在'})
+
+    # 更新用户名
+    current_user.username = new_username
+    db.session.commit()
+
+    # 记录操作
+    log_user_activity(current_user.id, 'update_username', f'修改用户名为 {new_username}')
+
+    return jsonify({'code': 1, 'msg': '用户名修改成功'})
+
+@app.route('/update_avatar', methods=['POST'])
+@login_required
+def update_avatar():
+    """
+    修改头像
+    :return: JSON响应
+    """
+    if 'avatar' not in request.files:
+        return jsonify({'code': 0, 'msg': '未选择文件'})
+
+    file = request.files['avatar']
+    if file.filename == '':
+        return jsonify({'code': 0, 'msg': '文件名为空'})
+
+    # 检查文件类型
+    if not allowed_file(file.filename, ALLOWED_IMAGE_EXTENSIONS):
+        return jsonify({'code': 0, 'msg': f'不支持的文件格式，仅支持图片({",".join(ALLOWED_IMAGE_EXTENSIONS)})'})
+
+    # 检查文件大小
+    file_size = len(file.read())
+    file.seek(0)
+    if file_size > MAX_IMAGE_SIZE:
+        return jsonify({'code': 0, 'msg': f'文件过大，最大支持{MAX_IMAGE_SIZE // 1024 // 1024}MB'})
+
+    # 保存文件
+    unique_filename = str(uuid.uuid4()) + '.' + file.filename.rsplit('.', 1)[1].lower()
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+    file.save(file_path)
+
+    # 更新用户头像路径
+    current_user.avatar = f'/static/uploads/{unique_filename}'
+    db.session.commit()
+
+    # 记录操作
+    log_user_activity(current_user.id, 'update_avatar', f'更新头像: {unique_filename}')
+
+    return jsonify({'code': 1, 'msg': '头像更新成功'})
+
 
 # -------------- 运行应用 --------------
 if __name__ == '__main__':

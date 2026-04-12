@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>基于flask聊天系统 - {{ current_user.username }}</title>
     <!-- Favicon图标 -->
     <link rel="icon" href="{{ url_for('static', filename='images/❤.png') }}" type="image/x-icon">
@@ -14,127 +15,226 @@
             box-sizing: border-box;
         }
         body {
-            display: flex;
             height: 100vh;
             background: #f5f5f5;
             font-family: "Microsoft YaHei", sans-serif;
-        }
-        /* 左侧联系人面板 */
-        .sidebar {
-            width: 300px;
-            background: white;
-            border-right: 1px solid #e0e0e0;
             display: flex;
             flex-direction: column;
         }
-        .sidebar-header {
-            padding: 15px;
+        /* 顶部导航栏 */
+        .top-nav {
+            background: #f7f7f7;
+            padding: 10px 15px;
             border-bottom: 1px solid #e0e0e0;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
         }
-        /* 聊天页面Logo */
-        .sidebar-logo {
-            display: flex;
-            align-items: center;
-        }
-        .sidebar-logo-img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-        .sidebar-title {
+        .top-nav h1 {
             font-size: 18px;
+            font-weight: normal;
             color: #333;
         }
-        .logout-link {
-            color: #ff3b30;
-            text-decoration: none;
-            font-size: 14px;
+        .top-nav .nav-actions {
+            display: flex;
+            gap: 15px;
         }
-        .contact-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-        }
-        .contact-item {
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-bottom: 5px;
+        .top-nav .action-btn {
+            font-size: 20px;
+            color: #333;
             cursor: pointer;
+        }
+        /* 搜索框 */
+        .search-bar {
+            background: #f7f7f7;
+            padding: 10px 15px;
+            margin-top: 50px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+        }
+        .search-input-container {
+            background: #e9e9e9;
+            border-radius: 20px;
+            padding: 8px 15px;
             display: flex;
             align-items: center;
         }
-        .contact-item:hover {
+        .search-input-container i {
+            color: #999;
+            margin-right: 10px;
+        }
+        .search-input-container input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 14px;
+        }
+        /* 聊天列表 */
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 110px;
+            margin-bottom: 60px;
+        }
+        .chat-item {
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .chat-item:hover {
             background: #f5f5f5;
         }
-        .contact-item.online::before {
-            content: "";
-            width: 10px;
-            height: 10px;
+        .chat-avatar {
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background: #07C160;
-            margin-right: 10px;
+            margin-right: 12px;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #999;
         }
-        .contact-item.offline::before {
-            content: "";
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #999;
-            margin-right: 10px;
+        .chat-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .chat-info-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .chat-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-time {
+            font-size: 12px;
+            color: #999;
+        }
+        .chat-info-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-message {
+            font-size: 14px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-badge {
+            background: #ff3b30;
+            color: white;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            min-width: 20px;
+            text-align: center;
+        }
+        /* 底部导航栏 */
+        .bottom-nav {
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px 0;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+        .nav-item i {
+            font-size: 20px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+        .nav-item span {
+            font-size: 12px;
+            color: #999;
+        }
+        .nav-item.active i,
+        .nav-item.active span {
+            color: #07C160;
         }
         /* 右侧聊天面板 */
         .chat-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+            width: 100%;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1001;
             background: white;
+            display: none;
+            flex-direction: column;
+        }
+        .chat-panel.active {
+            display: flex;
         }
         .chat-header {
             padding: 15px;
             border-bottom: 1px solid #e0e0e0;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            position: relative;
         }
-        .chat-title {
-            font-size: 18px;
+        .back-btn {
+            font-size: 20px;
+            color: #333;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+        .chat-header-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header-name {
+            font-size: 16px;
+            font-weight: 500;
             color: #333;
         }
-        .chat-tools {
+        .chat-header-status {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+        }
+        .chat-header-actions {
             display: flex;
-            gap: 10px;
+            gap: 15px;
         }
-        .search-input {
-            padding: 5px 10px;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            outline: none;
-            width: 200px;
-            /* 默认禁用搜索 */
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .btn {
-            padding: 5px 10px;
-            border: none;
-            border-radius: 5px;
+        .chat-header-actions i {
+            font-size: 20px;
+            color: #333;
             cursor: pointer;
-            font-size: 14px;
-            /* 默认禁用按钮 */
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .btn-search {
-            background: #1677ff;
-            color: white;
-        }
-        .btn-clear {
-            background: #ff3b30;
-            color: white;
         }
         .chat-messages {
             flex: 1;
@@ -146,6 +246,7 @@
             margin-bottom: 15px;
             max-width: 70%;
         }
+
         .message-item.self {
             margin-left: auto;
         }
@@ -191,10 +292,10 @@
             flex: 1;
             padding: 10px;
             border: 1px solid #e0e0e0;
-            border-radius: 5px;
+            border-radius: 20px;
             outline: none;
             resize: none;
-            height: 50px;
+            height: 40px;
             /* 默认禁用输入框 */
             opacity: 0.5;
             cursor: not-allowed;
@@ -202,9 +303,9 @@
         .btn-send {
             background: #07C160;
             color: white;
-            padding: 10px 20px;
+            padding: 8px 15px;
             border: none;
-            border-radius: 5px;
+            border-radius: 20px;
             cursor: pointer;
             /* 默认禁用发送按钮 */
             opacity: 0.5;
@@ -227,90 +328,249 @@
             margin-top: 50px;
             font-size: 16px;
         }
+        /* 响应式设计 - 手机屏幕适配 */
+        @media (max-width: 768px) {
+            .top-nav {
+                padding: 10px;
+            }
+            .search-bar {
+                padding: 10px;
+            }
+            .chat-list {
+                margin-top: 100px;
+                margin-bottom: 60px;
+            }
+            .chat-item {
+                padding: 12px 10px;
+            }
+            .chat-avatar {
+                width: 45px;
+                height: 45px;
+            }
+            .message-item {
+                max-width: 85%;
+            }
+            .file-message {
+                width: 150px;
+            }
+            .input-box {
+                height: 40px;
+            }
+            .btn-send {
+                padding: 8px 12px;
+            }
+            .chat-messages {
+                padding: 15px;
+            }
+            .chat-input {
+                padding: 10px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- 左侧联系人面板 -->
-    <div class="sidebar">
-            <div class="sidebar-header">
-                <!-- 聊天页面Logo -->
-                <div class="sidebar-logo">
-                    <img src="{{ url_for('static', filename='images/❤.png') }}" class="sidebar-logo-img" alt="Logo">
-                    <span class="sidebar-title">当前登录：{{ current_user.username }}</span>
-                </div>
-                <a href="/logout" class="logout-link">退出</a>
+    <!-- 顶部导航栏 -->
+    <div class="top-nav">
+        <h1>Flask聊天网站</h1>
+    </div>
+
+    <!-- 搜索框 -->
+    <div class="search-bar">
+        <div class="search-input-container">
+            <i class="fas fa-search"></i>
+            <input type="text" id="user-search-input" placeholder="搜索好友或聊天记录">
+        </div>
+        <button id="user-search-btn" style="margin-top: 10px; width: 100%; padding: 8px; background: #1677ff; color: white; border: none; border-radius: 20px; cursor: pointer;">搜索</button>
+    </div>
+
+    <!-- 聊天列表 -->
+    <div class="chat-list" id="chat-list">
+        <!-- 好友请求列表 -->
+        {% if friend_requests %}
+            <div style="padding: 10px; background: #f7f7f7; font-weight: bold; color: #ff9500;">
+                好友请求
             </div>
-            
-            <!-- 搜索用户输入框 -->
-            <div class="sidebar-search">
-                <div style="padding: 10px; border-bottom: 1px solid #e0e0e0;">
-                    <input type="text" id="user-search-input" placeholder="搜索用户添加好友" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 20px; outline: none;">
-                    <button id="user-search-btn" style="margin-top: 5px; width: 100%; padding: 6px; background: #1677ff; color: white; border: none; border-radius: 20px; cursor: pointer;">搜索</button>
-                </div>
-            </div>
-            
-            <!-- 好友请求列表 -->
-            {% if friend_requests %}
-                <div style="padding: 10px; border-bottom: 1px solid #e0e0e0; font-weight: bold; color: #ff9500;">
-                    好友请求
-                </div>
-                <div class="contact-list" id="request-list">
-                    {% for request in friend_requests %}
-                        <div class="contact-item {{ 'online' if request.sender.online else 'offline' }}">
-                            {{ request.sender.username }}
-                            <div style="margin-left: auto; display: flex; gap: 5px;">
+            {% for request in friend_requests %}
+                <div class="chat-item {{ 'online' if request.sender.online else 'offline' }}">
+                    <div class="chat-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="chat-info">
+                        <div class="chat-info-top">
+                            <div class="chat-name">{{ request.sender.username }}</div>
+                            <div class="chat-time">刚刚</div>
+                        </div>
+                        <div class="chat-info-bottom">
+                            <div class="chat-message">请求添加您为好友</div>
+                            <div style="display: flex; gap: 5px;">
                                 <button class="accept-request-btn" data-request-id="{{ request.id }}" style="padding: 2px 8px; background: #07C160; color: white; border: none; border-radius: 10px; font-size: 12px; cursor: pointer;">接受</button>
                                 <button class="reject-request-btn" data-request-id="{{ request.id }}" style="padding: 2px 8px; background: #ff3b30; color: white; border: none; border-radius: 10px; font-size: 12px; cursor: pointer;">拒绝</button>
                             </div>
                         </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-            
-            <!-- 好友列表 -->
-            <div style="padding: 10px; border-bottom: 1px solid #e0e0e0; font-weight: bold;">
-                好友列表
-            </div>
-            <div class="contact-list" id="friend-list">
-                {% if friends %}
-                    {% for user in friends %}
-                        <div class="contact-item {{ 'online' if user.online else 'offline' }}"
-                             data-user-id="{{ user.id }}"
-                             data-username="{{ user.username }}">
-                            {{ user.username }}
-                            <button class="remove-friend-btn" data-friend-id="{{ user.id }}" style="margin-left: auto; padding: 2px 8px; background: #ff3b30; color: white; border: none; border-radius: 10px; font-size: 12px; cursor: pointer;">删除</button>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <div style="padding: 20px; text-align: center; color: #999;">
-                        暂无好友，搜索用户添加
                     </div>
-                {% endif %}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- 好友列表 -->
+        <div style="padding: 10px; background: #f7f7f7; font-weight: bold;">
+            好友列表
+        </div>
+        {% if friends %}
+            {% for user in friends %}
+                <div class="chat-item {{ 'online' if user.online else 'offline' }}"
+                     data-user-id="{{ user.id }}"
+                     data-username="{{ user.username }}">
+                    <div class="chat-avatar" style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; margin-right: 10px;">
+                        {% if user.avatar %}
+                            <img src="{{ user.avatar }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            <i class="fas fa-user" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #999;"></i>
+                        {% endif %}
+                    </div>
+                    <div class="chat-info">
+                        <div class="chat-info-top">
+                            <div class="chat-name">{{ user.username }}</div>
+                            <div class="chat-time">刚刚</div>
+                        </div>
+                        <div class="chat-info-bottom">
+                            <div class="chat-message">点击开始聊天</div>
+                            <button class="remove-friend-btn" data-friend-id="{{ user.id }}" style="padding: 2px 8px; background: #ff3b30; color: white; border: none; border-radius: 10px; font-size: 12px; cursor: pointer;">删除</button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div style="padding: 20px; text-align: center; color: #999;">
+                暂无好友，搜索用户添加
+            </div>
+        {% endif %}
+
+        <!-- 搜索结果列表 -->
+        <div style="padding: 10px; background: #f7f7f7; font-weight: bold; display: none;" id="search-result-title">
+            搜索结果
+        </div>
+        <div id="search-result-list" style="display: none;">
+            <!-- 搜索结果将通过JavaScript动态添加 -->
+        </div>
+    </div>
+
+    <!-- 底部导航栏 -->
+    <div class="bottom-nav">
+        <div class="nav-item active" data-page="wechat">
+            <i class="fas fa-comment"></i>
+            <span>主界面</span>
+        </div>
+        <div class="nav-item" data-page="profile">
+            <i class="fas fa-user"></i>
+            <span>我</span>
+        </div>
+    </div>
+
+
+
+    <!-- 个人中心页面 -->
+    <div class="profile-page" style="display: none; height: 100vh; flex-direction: column;">
+        <div class="top-nav">
+            <h1>我</h1>
+        </div>
+        <div class="profile-content" style="flex: 1; padding: 20px; margin-top: 50px; margin-bottom: 60px;">
+            <div style="background: white; border-radius: 10px; overflow: hidden; margin-bottom: 20px;">
+                <div style="padding: 20px; display: flex; align-items: center;">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #999; margin-right: 15px; position: relative; overflow: hidden;">
+                        {% if current_user.avatar %}
+                            <img src="{{ current_user.avatar }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            <i class="fas fa-user"></i>
+                        {% endif %}
+                        <input type="file" id="avatar-input" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+                    </div>
+                    <div style="flex: 1;">
+                        <div id="username-display" style="font-size: 20px; font-weight: 500; color: #333; margin-bottom: 5px; cursor: pointer; padding: 5px; border-radius: 5px; transition: background-color 0.2s;">{{ current_user.username }}</div>
+                        <div id="username-edit" style="display: none; margin-top: 5px;">
+                            <input type="text" id="username-input" value="{{ current_user.username }}" style="padding: 5px; border: 1px solid #07C160; border-radius: 5px; outline: none; font-size: 16px; width: calc(100% - 80px);">
+                            <button id="update-username-btn" style="margin-left: 10px; padding: 5px 10px; background: #07C160; color: white; border: none; border-radius: 5px; font-size: 14px; cursor: pointer;">保存</button>
+                        </div>
+                        <div style="font-size: 14px; color: #999;">点击名字修改用户名</div>
+                        <div style="font-size: 14px; color: #999;">点击头像可修改头像</div>
+                    </div>
+                </div>
+            </div>
+            <div style="background: white; border-radius: 10px; overflow: hidden; margin-bottom: 20px;">
+                <div id="change-password-btn" style="display: flex; justify-content: space-between; align-items: center; text-decoration: none; padding: 15px; cursor: pointer;">
+                    <div style="font-size: 16px; color: #333;">修改密码</div>
+                    <i class="fas fa-chevron-right" style="color: #999;"></i>
+                </div>
+            </div>
+            <div style="background: white; border-radius: 10px; overflow: hidden;">
+                <a href="/logout" style="display: flex; justify-content: space-between; align-items: center; text-decoration: none; padding: 15px;">
+                    <div style="font-size: 16px; color: #ff3b30;">退出登录</div>
+                    <i class="fas fa-chevron-right" style="color: #999;"></i>
+                </a>
             </div>
             
-            <!-- 搜索结果列表 -->
-            <div style="padding: 10px; border-bottom: 1px solid #e0e0e0; font-weight: bold; display: none;" id="search-result-title">
-                搜索结果
-            </div>
-            <div class="contact-list" id="search-result-list" style="display: none;">
-                <!-- 搜索结果将通过JavaScript动态添加 -->
+            <!-- 密码修改弹窗 -->
+            <div id="change-password-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                <div style="background: white; border-radius: 10px; padding: 20px; width: 90%; max-width: 400px;">
+                    <h2 style="text-align: center; margin-bottom: 20px;">修改密码</h2>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-size: 14px;">原密码</label>
+                        <input type="password" id="old-password" style="width: 100%; padding: 10px; border: 1px solid #e0e0e0; border-radius: 5px; outline: none;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-size: 14px;">新密码</label>
+                        <input type="password" id="new-password" style="width: 100%; padding: 10px; border: 1px solid #e0e0e0; border-radius: 5px; outline: none;">
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-size: 14px;">确认新密码</label>
+                        <input type="password" id="confirm-password" style="width: 100%; padding: 10px; border: 1px solid #e0e0e0; border-radius: 5px; outline: none;">
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <button id="cancel-change-password" style="padding: 10px 20px; background: #f0f0f0; color: #333; border: none; border-radius: 5px; cursor: pointer;">取消</button>
+                        <button id="confirm-change-password" style="padding: 10px 20px; background: #07C160; color: white; border: none; border-radius: 5px; cursor: pointer;">确认</button>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
 
     <!-- 右侧聊天面板 -->
     <div class="chat-panel">
         <div class="chat-header">
-            <div class="chat-title" id="chat-title">请选择联系人开始聊天</div>
-            <div class="chat-tools">
-                <input type="text" class="search-input" id="search-input" placeholder="输入关键词搜索聊天记录" disabled>
-                <button class="btn btn-search" id="search-btn" disabled>搜索</button>
-                <button class="btn btn-clear" id="clear-btn" disabled>清空记录</button>
+            <div class="back-btn" id="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            <div class="chat-header-info">
+                <div class="chat-header-name" id="chat-title">请选择联系人开始聊天</div>
+                <div class="chat-header-status" id="chat-status">在线</div>
+            </div>
+            <div class="chat-header-actions">
+                <i class="fas fa-search" id="chat-search-btn"></i>
+                <i class="fas fa-ellipsis-v" id="chat-menu-btn"></i>
             </div>
         </div>
-        <div class="chat-messages" id="chat-messages">
-            <div class="empty-tip">请选择左侧联系人开始聊天</div>
+        
+        <!-- 聊天搜索框 -->
+        <div class="chat-search-container" style="display: none; padding: 10px; background: #f0f0f0;">
+            <div style="display: flex; align-items: center;">
+                <i class="fas fa-search" style="margin-right: 10px; color: #999;"></i>
+                <input type="text" id="chat-search-input" placeholder="搜索聊天记录" style="flex: 1; padding: 8px; border: none; border-radius: 20px; background: white; outline: none;">
+                <button id="chat-search-cancel" style="margin-left: 10px; color: #1677ff; background: none; border: none; cursor: pointer;">取消</button>
+            </div>
         </div>
-        <!-- 修复：聊天输入框移到消息区域外 -->
+        
+        <!-- 聊天菜单 -->
+        <div class="chat-menu" style="display: none; position: absolute; top: 60px; right: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); z-index: 1000; min-width: 120px;">
+            <div class="menu-item" id="clear-chat-btn" style="padding: 12px 16px; cursor: pointer;">
+                清空聊天记录
+            </div>
+        </div>
+        
+
+        
+        <div class="chat-messages" id="chat-messages">
+            <div class="empty-tip">请选择联系人开始聊天</div>
+        </div>
         <div class="chat-input">
             <label for="file-input" class="file-btn" id="file-btn" disabled>
                 <i class="fas fa-paperclip"></i>
@@ -328,6 +588,7 @@
         let currentReceiverId = null;
         let currentReceiverName = null;
         const currentUserId = {{ current_user.id }};
+        const currentUserAvatar = {{ current_user.avatar|tojson|default('null') }}; // 当前用户的头像
         const isMuted = {{ is_muted | tojson }}; // 禁言状态转为JS布尔值
         const socket = io({
             reconnection: true,
@@ -371,49 +632,119 @@
         }
         
         // 检查用户状态并更新界面
-        function checkUserStatus() {
-            // 向服务器请求用户状态
-            $.get('/user/status', function(res) {
-                if (res.code === 1) {
-                    const userStatus = res.data;
-                    // 更新全局变量
-                    isMuted = userStatus.is_muted;
-                    // 更新界面状态
-                    if (currentReceiverId) {
-                        setDisabledState(false);
+
+
+
+
+        // 绑定聊天列表项点击事件
+        function bindContactClick() {
+            $('.chat-item').click(function() {
+                currentReceiverId = $(this).data('user-id');
+                currentReceiverName = $(this).data('username');
+                if (currentReceiverId && currentReceiverName) {
+                    $('#chat-title').text(currentReceiverName);
+                    // 启用输入框和按钮
+                    setDisabledState(false);
+                    // 加载历史消息
+                    loadMessages();
+                    
+                    // 显示聊天面板，隐藏主界面
+                    $('.top-nav, .search-bar, .chat-list, .bottom-nav').hide();
+                    $('.chat-panel').addClass('active');
+                    $('.chat-panel').show();
+                }
+            });
+        }
+        
+        // 绑定返回按钮点击事件
+        function bindBackButtonClick() {
+            $('#back-btn').click(function() {
+                // 隐藏聊天面板，显示Flask聊天网站页面
+                $('.chat-panel').removeClass('active');
+                $('.chat-panel').hide();
+                switchPage('wechat');
+            });
+        }
+        
+        // 绑定聊天界面搜索按钮点击事件
+        function bindChatSearchClick() {
+            $('#chat-search-btn').click(function() {
+                $('.chat-search-container').show();
+                $('#chat-search-input').focus();
+            });
+            
+            // 绑定搜索框取消按钮点击事件
+            $('#chat-search-cancel').click(function() {
+                $('.chat-search-container').hide();
+                $('#chat-search-input').val('');
+            });
+            
+            // 绑定搜索框回车事件
+            $('#chat-search-input').keydown(function(e) {
+                if (e.key === 'Enter') {
+                    const keyword = $(this).val().trim();
+                    if (keyword && currentReceiverId) {
+                        $.get(`/search_messages/${currentReceiverId}?keyword=${keyword}`, function(res) {
+                            const messagesContainer = $('#chat-messages');
+                            messagesContainer.empty();
+                            if (res.code === 0) {
+                                messagesContainer.html(`<div class="empty-tip">${res.msg}</div>`);
+                                return;
+                            }
+                            messagesContainer.html(`<div class="empty-tip">找到${res.data.length}条结果</div>`);
+                            res.data.forEach(msg => {
+                                if (msg.content) {
+                                    // 关键词高亮
+                                    const highlightedContent = msg.content.replace(new RegExp(keyword, 'g'), `<span style="color:red">${keyword}</span>`);
+                                    const isSelf = msg.sender_id === currentUserId;
+                                    const messageHtml = `
+                                        <div class="message-item ${isSelf ? 'self' : 'other'}">
+                                            ${!isSelf ? `<div class="message-avatar" style="margin-right: 10px; width: 36px; height: 36px; border-radius: 50%; overflow: hidden;"><img src="${msg.avatar || '/static/default_avatar.png'}" style="width: 100%; height: 100%; object-fit: cover;"></div>` : ''}
+                                            <div class="message-content">${highlightedContent}</div>
+                                            ${isSelf ? `<div class="message-avatar" style="margin-left: 10px; width: 36px; height: 36px; border-radius: 50%; overflow: hidden;"><img src="${currentUserAvatar || '/static/default_avatar.png'}" style="width: 100%; height: 100%; object-fit: cover;"></div>` : ''}
+                                            <div class="message-time">${msg.timestamp}</div>
+                                        </div>
+                                    `;
+                                    messagesContainer.append(messageHtml);
+                                }
+                            });
+                        });
                     }
                 }
             });
         }
-
-        // 加载联系人列表
-        function loadContacts() {
-            $.get('/get_contacts', function(users) {
-                const contactList = $('#contact-list');
-                contactList.empty();
-                users.forEach(user => {
-                    contactList.append(`
-                        <div class="contact-item ${user.online ? 'online' : 'offline'}"
-                             data-user-id="${user.id}"
-                             data-username="${user.username}">
-                            ${user.username}
-                        </div>
-                    `);
-                });
-                bindContactClick();
+        
+        // 绑定聊天菜单按钮点击事件
+        function bindChatMenuClick() {
+            $('#chat-menu-btn').click(function() {
+                $('.chat-menu').toggle();
             });
-        }
-
-        // 绑定联系人点击事件
-        function bindContactClick() {
-            $('.contact-item').click(function() {
-                currentReceiverId = $(this).data('user-id');
-                currentReceiverName = $(this).data('username');
-                $('#chat-title').text(currentReceiverName);
-                // 启用输入框和按钮
-                setDisabledState(false);
-                // 加载历史消息
-                loadMessages();
+            
+            // 点击页面其他地方关闭菜单
+            $(document).click(function(e) {
+                if (!$(e.target).closest('#chat-menu-btn').length && !$(e.target).closest('.chat-menu').length) {
+                    $('.chat-menu').hide();
+                }
+            });
+            
+            // 绑定清空聊天记录按钮点击事件
+            $('#clear-chat-btn').click(function() {
+                if (!currentReceiverId) return;
+                if (confirm(`确定要清空与${currentReceiverName}的所有聊天记录吗？此操作不可恢复！`)) {
+                    $.ajax({
+                        url: `/clear_messages/${currentReceiverId}`,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 1) {
+                                const messagesContainer = $('#chat-messages');
+                                messagesContainer.empty();
+                                messagesContainer.html('<div class="empty-tip">暂无聊天记录</div>');
+                                alert(res.msg);
+                                $('.chat-menu').hide();
+                            }
+                        }
+                    });
+                }
             });
         }
         
@@ -532,50 +863,118 @@
                     return;
                 }
                 
-                $.get(`/search_user?keyword=${keyword}`, function(res) {
-                    if (res.code === 1) {
-                        const searchResultTitle = $('#search-result-title');
-                        const searchResultList = $('#search-result-list');
+                // 显示加载状态
+                const searchResultTitle = $('#search-result-title');
+                const searchResultList = $('#search-result-list');
+                searchResultTitle.show();
+                searchResultList.show();
+                searchResultList.html('<div style="padding: 20px; text-align: center; color: #999;">搜索中...</div>');
+                
+                // 并行搜索用户和聊天记录
+                $.when(
+                    $.get(`/search_user?keyword=${keyword}`),
+                    $.get(`/search_all_messages?keyword=${keyword}`)
+                ).done(function(userRes, messageRes) {
+                    // 清空现有列表
+                    searchResultList.empty();
+                    
+                    let hasResults = false;
+                    
+                    // 显示用户搜索结果
+                    if (userRes[0].code === 1 && userRes[0].data.non_friends.length > 0) {
+                        hasResults = true;
+                        // 添加用户结果标题
+                        searchResultList.append('<div style="padding: 10px; background: #f7f7f7; font-weight: bold; color: #333;">用户</div>');
                         
-                        // 清空现有列表
-                        searchResultList.empty();
-                        
-                        if (res.data.non_friends.length > 0) {
-                            // 显示搜索结果标题和列表
-                            searchResultTitle.show();
-                            searchResultList.show();
+                        userRes[0].data.non_friends.forEach(user => {
+                            let buttonHtml = '';
+                            if (user.has_pending_request) {
+                                buttonHtml = '<button style="padding: 2px 8px; background: #999; color: white; border: none; border-radius: 10px; font-size: 12px; cursor: not-allowed; opacity: 0.5;">请求已发送</button>';
+                            } else {
+                                buttonHtml = `<button class="send-request-btn" data-friend-id="${user.id}" style="padding: 2px 8px; background: #07C160; color: white; border: none; border-radius: 10px; font-size: 12px; cursor: pointer;">发送请求</button>`;
+                            }
                             
-                            res.data.non_friends.forEach(user => {
-                                let buttonHtml = '';
-                                if (user.has_pending_request) {
-                                    buttonHtml = '<button style="margin-left: auto; padding: 2px 8px; background: #999; color: white; border: none; border-radius: 10px; font-size: 12px; cursor: not-allowed; opacity: 0.5;">请求已发送</button>';
-                                } else {
-                                    buttonHtml = `<button class="send-request-btn" data-friend-id="${user.id}" style="margin-left: auto; padding: 2px 8px; background: #07C160; color: white; border: none; border-radius: 10px; font-size: 12px; cursor: pointer;">发送请求</button>`;
-                                }
-                                
-                                searchResultList.append(`
-                                    <div class="contact-item ${user.online ? 'online' : 'offline'}"
-                                         data-user-id="${user.id}"
-                                         data-username="${user.username}">
-                                        ${user.username}
-                                        ${buttonHtml}
+                            searchResultList.append(`
+                                <div class="chat-item ${user.online ? 'online' : 'offline'}"
+                                     data-user-id="${user.id}"
+                                     data-username="${user.username}">
+                                    <div class="chat-avatar">
+                                        <i class="fas fa-user"></i>
                                     </div>
-                                `);
-                            });
-                        } else {
-                            // 显示无结果提示
-                            searchResultTitle.show();
-                            searchResultList.show();
-                            searchResultList.html('<div style="padding: 20px; text-align: center; color: #999;">没有找到匹配的用户</div>');
-                        }
-                        
-                        // 重新绑定事件
-                        bindContactClick();
-                        bindSendRequestClick();
-                        bindRemoveFriendClick();
-                    } else {
-                        alert(res.msg);
+                                    <div class="chat-info">
+                                        <div class="chat-info-top">
+                                            <div class="chat-name">${user.username}</div>
+                                            <div class="chat-time">${user.online ? '在线' : '离线'}</div>
+                                        </div>
+                                        <div class="chat-info-bottom">
+                                            <div class="chat-message">点击发送好友请求</div>
+                                            ${buttonHtml}
+                                        </div>
+                                    </div>
+                                </div>
+                            `);
+                        });
                     }
+                    
+                    // 显示聊天记录搜索结果
+                    if (messageRes[0].code === 1 && messageRes[0].data.length > 0) {
+                        hasResults = true;
+                        // 添加聊天记录结果标题
+                        searchResultList.append('<div style="padding: 10px; background: #f7f7f7; font-weight: bold; color: #333;">聊天记录</div>');
+                        
+                        // 按联系人分组
+                        const messagesByContact = {};
+                        messageRes[0].data.forEach(msg => {
+                            const contactId = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
+                            const contactName = msg.sender_id === currentUserId ? msg.receiver_name : msg.sender_name;
+                            if (!messagesByContact[contactId]) {
+                                messagesByContact[contactId] = {
+                                    id: contactId,
+                                    name: contactName,
+                                    messages: []
+                                };
+                            }
+                            messagesByContact[contactId].messages.push(msg);
+                        });
+                        
+                        // 显示每个联系人的聊天记录
+                        Object.values(messagesByContact).forEach(contact => {
+                            // 只显示最新的一条消息
+                            const latestMsg = contact.messages[0];
+                            const content = latestMsg.content || (latestMsg.file_type === 'image' ? '[图片]' : '[语音]');
+                            
+                            searchResultList.append(`
+                                <div class="chat-item"
+                                     data-user-id="${contact.id}"
+                                     data-username="${contact.name}">
+                                    <div class="chat-avatar">
+                                        <i class="fas fa-comment"></i>
+                                    </div>
+                                    <div class="chat-info">
+                                        <div class="chat-info-top">
+                                            <div class="chat-name">${contact.name}</div>
+                                            <div class="chat-time">${latestMsg.timestamp}</div>
+                                        </div>
+                                        <div class="chat-info-bottom">
+                                            <div class="chat-message">${content}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `);
+                        });
+                    }
+                    
+                    // 如果没有结果
+                    if (!hasResults) {
+                        searchResultList.html('<div style="padding: 20px; text-align: center; color: #999;">没有找到匹配的结果</div>');
+                    }
+                    
+                    // 重新绑定事件
+                    bindContactClick();
+                    bindSendRequestClick();
+                    bindRemoveFriendClick();
+                }).fail(function() {
+                    searchResultList.html('<div style="padding: 20px; text-align: center; color: #999;">搜索失败，请重试</div>');
                 });
             });
         }
@@ -617,8 +1016,10 @@
             if (msg.content) {
                 // 文字消息
                 messageHtml = `
-                    <div class="message-item ${isSelf ? 'self' : 'other'}">
+                    <div class="message-item ${isSelf ? 'self' : 'other'}" data-message-id="${msg.id || Math.random().toString(36).substr(2, 9)}">
+                        ${!isSelf ? (msg.avatar ? `<div class="message-avatar" style="margin-right: 10px; width: 36px; height: 36px; border-radius: 50%; overflow: hidden;"><img src="${msg.avatar}" style="width: 100%; height: 100%; object-fit: cover;"></div>` : '') : ''}
                         <div class="message-content">${msg.content}</div>
+                        ${isSelf ? (currentUserAvatar ? `<div class="message-avatar" style="margin-left: 10px; width: 36px; height: 36px; border-radius: 50%; overflow: hidden;"><img src="${currentUserAvatar}" style="width: 100%; height: 100%; object-fit: cover;"></div>` : '') : ''}
                         <div class="message-time">${msg.timestamp}</div>
                     </div>
                 `;
@@ -626,23 +1027,27 @@
                 // 文件消息
                 if (msg.file_type === 'image') {
                     messageHtml = `
-                        <div class="message-item ${isSelf ? 'self' : 'other'}">
+                        <div class="message-item ${isSelf ? 'self' : 'other'}" data-message-id="${msg.id || Math.random().toString(36).substr(2, 9)}">
+                            ${!isSelf ? (msg.avatar ? `<div class="message-avatar" style="margin-right: 10px; width: 36px; height: 36px; border-radius: 50%; overflow: hidden;"><img src="${msg.avatar}" style="width: 100%; height: 100%; object-fit: cover;"></div>` : '') : ''}
                             <div class="message-content">
                                 <div class="file-message">
                                     <img src="${msg.file_path}" alt="图片" onclick="window.open(this.src)">
                                 </div>
                             </div>
+                            ${isSelf ? (currentUserAvatar ? `<div class="message-avatar" style="margin-left: 10px; width: 36px; height: 36px; border-radius: 50%; overflow: hidden;"><img src="${currentUserAvatar}" style="width: 100%; height: 100%; object-fit: cover;"></div>` : '') : ''}
                             <div class="message-time">${msg.timestamp}</div>
                         </div>
                     `;
                 } else if (msg.file_type === 'audio') {
                     messageHtml = `
-                        <div class="message-item ${isSelf ? 'self' : 'other'}">
+                        <div class="message-item ${isSelf ? 'self' : 'other'}" data-message-id="${msg.id || Math.random().toString(36).substr(2, 9)}">
+                            ${!isSelf ? (msg.avatar ? `<div class="message-avatar" style="margin-right: 10px; width: 36px; height: 36px; border-radius: 50%; overflow: hidden;"><img src="${msg.avatar}" style="width: 100%; height: 100%; object-fit: cover;"></div>` : '') : ''}
                             <div class="message-content">
                                 <audio controls src="${msg.file_path}">
                                     您的浏览器不支持音频播放
-                                </audio>
+                                 </audio>
                             </div>
+                            ${isSelf ? (currentUserAvatar ? `<div class="message-avatar" style="margin-left: 10px; width: 36px; height: 36px; border-radius: 50%; overflow: hidden;"><img src="${currentUserAvatar}" style="width: 100%; height: 100%; object-fit: cover;"></div>` : '') : ''}
                             <div class="message-time">${msg.timestamp}</div>
                         </div>
                     `;
@@ -679,25 +1084,15 @@
                 timestamp: timestamp
             };
             
-            // 再次检查用户状态，确保在发送过程中没有被禁言或封号
-            $.get('/user/status', function(res) {
-                if (res.code === 1 && !res.data.is_muted && !res.data.is_banned) {
-                    // 用户状态正常，允许发送消息
-                    addMessageToDOM(selfMsg); // 立即显示到自己的聊天面板
+            // 发送消息
+            addMessageToDOM(selfMsg); // 立即显示到自己的聊天面板
 
-                    // 发送给后端（持久化+推送给接收方）
-                    socket.emit('send_text_message', {
-                        receiver_id: currentReceiverId,
-                        content: content
-                    });
-                    $('#message-input').val('');
-                } else {
-                    // 用户状态异常，更新全局变量并禁用界面
-                    isMuted = true;
-                    setDisabledState(false);
-                    alert('您已被禁言/封号，无法发送消息');
-                }
+            // 发送给后端（持久化+推送给接收方）
+            socket.emit('send_text_message', {
+                receiver_id: currentReceiverId,
+                content: content
             });
+            $('#message-input').val('');
         }
 
         // 发送文件消息
@@ -705,51 +1100,41 @@
             const file = this.files[0];
             if (!file || !currentReceiverId || isMuted) return;
 
-            // 再次检查用户状态，确保在发送过程中没有被禁言或封号
-            $.get('/user/status', function(res) {
-                if (res.code === 1 && !res.data.is_muted && !res.data.is_banned) {
-                    // 用户状态正常，允许发送文件
-                    const formData = new FormData();
-                    formData.append('file', file);
+            // 发送文件
+            const formData = new FormData();
+            formData.append('file', file);
 
-                    $.ajax({
-                        url: '/upload_file',
-                        type: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function(res) {
-                            if (res.code === 1) {
-                                // 构建文件消息对象，实时添加到自己的DOM
-                                const now = new Date();
-                                const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                                const selfFileMsg = {
-                                    sender_id: currentUserId,
-                                    file_type: res.data.file_type,
-                                    file_path: res.data.file_path,
-                                    timestamp: timestamp
-                                };
-                                addMessageToDOM(selfFileMsg); // 立即显示到自己的聊天面板
+            $.ajax({
+                url: '/upload_file',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(res) {
+                    if (res.code === 1) {
+                        // 构建文件消息对象，实时添加到自己的DOM
+                        const now = new Date();
+                        const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                        const selfFileMsg = {
+                            sender_id: currentUserId,
+                            file_type: res.data.file_type,
+                            file_path: res.data.file_path,
+                            timestamp: timestamp
+                        };
+                        addMessageToDOM(selfFileMsg); // 立即显示到自己的聊天面板
 
-                                // 发送给后端（推送给接收方）
-                                socket.emit('send_file_message', {
-                                    receiver_id: currentReceiverId,
-                                    file_type: res.data.file_type,
-                                    file_path: res.data.file_path
-                                });
-                            } else {
-                                alert(res.msg);
-                            }
-                        },
-                        error: function() {
-                            alert('文件上传失败');
-                        }
-                    });
-                } else {
-                    // 用户状态异常，更新全局变量并禁用界面
-                    isMuted = true;
-                    setDisabledState(false);
-                    alert('您已被禁言/封号，无法发送文件');
+                        // 发送给后端（推送给接收方）
+                        socket.emit('send_file_message', {
+                            receiver_id: currentReceiverId,
+                            file_type: res.data.file_type,
+                            file_path: res.data.file_path
+                        });
+                    } else {
+                        alert(res.msg);
+                    }
+                },
+                error: function() {
+                    alert('文件上传失败');
                 }
             });
             $(this).val('');
@@ -817,6 +1202,164 @@
             }
         });
 
+        // 页面切换函数
+        function switchPage(pageName) {
+            // 隐藏所有页面，包括聊天面板
+            $('.top-nav, .search-bar, .chat-list, .profile-page, .chat-panel').hide();
+            
+            // 重置底部导航栏状态
+            $('.nav-item').removeClass('active');
+            $(`.nav-item[data-page="${pageName}"]`).addClass('active');
+            
+            // 显示对应页面和底部导航栏
+            if (pageName === 'wechat') {
+                $('.top-nav, .search-bar, .chat-list, .bottom-nav').show();
+            } else if (pageName === 'profile') {
+                $('.profile-page, .bottom-nav').show();
+                $('.profile-page').css('display', 'flex');
+            }
+        }
+
+        // 绑定底部导航栏点击事件
+        function bindNavItemClick() {
+            $('.nav-item').click(function() {
+                const pageName = $(this).data('page');
+                switchPage(pageName);
+            });
+        }
+
+        // 绑定修改用户名相关事件
+        function bindUpdateUsernameClick() {
+            // 点击用户名显示编辑框
+            $('#username-display').click(function() {
+                $(this).hide();
+                $('#username-edit').show();
+                $('#username-input').focus();
+            });
+            
+            // 点击保存按钮修改用户名
+            $('#update-username-btn').click(function() {
+                const newUsername = $('#username-input').val().trim();
+                if (!newUsername) {
+                    alert('请输入新用户名');
+                    return;
+                }
+                
+                $.ajax({
+                    url: '/update_username',
+                    type: 'POST',
+                    data: { username: newUsername },
+                    success: function(res) {
+                        if (res.code === 1) {
+                            alert(res.msg);
+                            // 刷新页面以更新用户名
+                            location.reload();
+                        } else {
+                            alert(res.msg);
+                        }
+                    },
+                    error: function() {
+                        alert('修改用户名失败');
+                    }
+                });
+            });
+        }
+
+        // 绑定头像上传事件
+        function bindAvatarUpload() {
+            $('#avatar-input').change(function() {
+                const file = this.files[0];
+                if (!file) return;
+                
+                const formData = new FormData();
+                formData.append('avatar', file);
+                
+                $.ajax({
+                    url: '/update_avatar',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        if (res.code === 1) {
+                            alert(res.msg);
+                            // 刷新页面以更新头像
+                            location.reload();
+                        } else {
+                            alert(res.msg);
+                        }
+                    },
+                    error: function() {
+                        alert('上传头像失败');
+                    }
+                });
+            });
+        }
+        
+        // 绑定修改密码相关事件
+        function bindChangePasswordEvents() {
+            // 显示密码修改弹窗
+            $('#change-password-btn').click(function() {
+                $('#change-password-modal').css('display', 'flex');
+            });
+            
+            // 关闭密码修改弹窗
+            $('#cancel-change-password').click(function() {
+                $('#change-password-modal').css('display', 'none');
+                // 清空输入框
+                $('#old-password').val('');
+                $('#new-password').val('');
+                $('#confirm-password').val('');
+            });
+            
+            // 确认修改密码
+            $('#confirm-change-password').click(function() {
+                const oldPassword = $('#old-password').val().trim();
+                const newPassword = $('#new-password').val().trim();
+                const confirmPassword = $('#confirm-password').val().trim();
+                
+                // 验证输入
+                if (!oldPassword) {
+                    alert('请输入原密码');
+                    return;
+                }
+                if (!newPassword) {
+                    alert('请输入新密码');
+                    return;
+                }
+                if (newPassword !== confirmPassword) {
+                    alert('两次输入的新密码不一致');
+                    return;
+                }
+                
+                // 发送请求修改密码
+                $.ajax({
+                    url: '/change_password',
+                    type: 'POST',
+                    data: {
+                        old_password: oldPassword,
+                        new_password: newPassword
+                    },
+                    success: function(res) {
+                        if (res.code === 1) {
+                            alert(res.msg);
+                            // 关闭弹窗
+                            $('#change-password-modal').css('display', 'none');
+                            // 清空输入框
+                            $('#old-password').val('');
+                            $('#new-password').val('');
+                            $('#confirm-password').val('');
+                        } else {
+                            alert(res.msg);
+                        }
+                    },
+                    error: function() {
+                        alert('修改密码失败');
+                    }
+                });
+            });
+        }
+
         // 页面加载初始化
         $(document).ready(function() {
             // 初始状态禁用所有输入/按钮
@@ -829,17 +1372,26 @@
             bindRejectRequestClick();
             bindUserSearchClick();
             bindUserSearchEnter();
-            
-            // 页面加载时检查用户状态
-            checkUserStatus();
-            
-            // 每30秒检查一次用户状态，确保及时发现禁言/封号状态变化
-            setInterval(checkUserStatus, 30000);
+            bindBackButtonClick();
+            bindNavItemClick();
+            bindUpdateUsernameClick();
+            bindAvatarUpload();
+            bindChatSearchClick();
+            bindChatMenuClick();
+            bindChangePasswordEvents();
         });
 
-        // SocketIO连接成功刷新联系人状态
+        // SocketIO连接成功
         socket.on('connect', function() {
-            loadContacts();
+            console.log('SocketIO连接成功');
+        });
+        
+        // 接收用户状态推送
+        socket.on('user_status', function(data) {
+            isMuted = data.is_muted;
+            if (currentReceiverId) {
+                setDisabledState(false);
+            }
         });
     </script>
 </body>
