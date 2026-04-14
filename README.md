@@ -1,4 +1,4 @@
-# Wechat_Flask 系统技术文档
+# CouldTalk 聊天网站技术文档
 
 ## 📌 项目概述
 本项目是一个基于 **Flask** 和 **WebSocket (SocketIO)** 构建的即时通讯系统。系统支持多端登录限制、好友管理、即时聊天（文本/文件）、以及完善的管理员审计与后台管理功能。
@@ -93,7 +93,7 @@
 <img src="https://github.com/user-attachments/assets/0a2c6783-7ccf-4091-a57a-099ed1c215ac" width="300" height="300" />
 
 ```text
-Wechat_Flask License (Non-Commercial)
+CouldTalk License (Non-Commercial)
 
 版权所有 (c) 2026 LLH
 
