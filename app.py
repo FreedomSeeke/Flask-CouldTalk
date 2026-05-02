@@ -54,9 +54,9 @@ if not os.path.exists(UPLOAD_FOLDER):
 app.config['MAIL_SERVER'] = 'smtp.qq.com'  # QQ邮箱SMTP服务器
 app.config['MAIL_PORT'] = 587  # SMTP端口
 app.config['MAIL_USE_TLS'] = True  # 启用TLS
-app.config['MAIL_USERNAME'] = '3602946878@qq.com'  # 发送邮件的邮箱
-app.config['MAIL_PASSWORD'] = 'omcrzctmugoochjh'  # 邮箱授权码（不是登录密码）
-app.config['MAIL_DEFAULT_SENDER'] = '3602946878@qq.com'  # 默认发送者
+app.config['MAIL_USERNAME'] = '0000000@qq.com'  # 发送邮件的邮箱
+app.config['MAIL_PASSWORD'] = 'aaaaaaaaaaa'  # 邮箱授权码（不是登录密码）
+app.config['MAIL_DEFAULT_SENDER'] = '0000000@qq.com'  # 默认发送者
 
 # 初始化数据库和SocketIO
 db = SQLAlchemy(app)
